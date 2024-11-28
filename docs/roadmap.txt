@@ -1,0 +1,71 @@
+Trabalho de grupo APROG
+data de ENTREGA: 12 de Janeiro de 2025
+Tema: Sistema de Tickets de atendimento público num Centro de Saúde
+
+Recolha de dados:
+	Extrutura de um Ticket:
+		Tipo: Marcada | Urgência
+		ID
+		data-criação
+		data-atendimento
+		balcão-atendimento
+		médico-atribuído
+		especialidade
+		gabinente-atendimento
+		valor-pagar
+		
+	Comportamento esperado:
+		Tickets:
+			A sequência de tickets é renovada sempre que o programa reinicia
+			o ticket ao ser gerado é-lhe atribuído um ID sequencial com base no balcão de atendimento, o balcão-atendimento, data e hora de criação, médico-atribuído e especialidade.
+			Caso seja consulta Marcada:
+				é também atribuído o valor a pagar
+			Caso seja urgência:
+				é também atribuída a sala de enfermagem para triagem
+				
+		Funcionalidade pedidas:
+			Gerar tickets de ambos os tipos
+			Listar todos os tickets  ordenados por data e hora
+			Atualizar info de um Ticket quando atendido
+			
+			Reports:
+				mapa de volume de tickets atendidos num intervalo de datas
+				mapas de médias de espera num intervalo de datas
+				mapa de balcões mais e menos produtivos num intervalo de datas
+				mapa de receitas de consultas marcadas num intervalo de datas
+		Balcões:
+			Existem 3, o balcão 3 apenas atende urgências
+			
+		Validações:
+			Tickets de urgencia apenas podem ser atribuídos ao balcão 3.
+			Valor a pagar maior do que zero.
+			Deve existir um limite para tickets do tipo urgência, de maneira a limitar a emissão destes tickets no momento da sua criação.
+			
+	**são valorizadas funcionalidades não pedidas, que forem úteis e interessantes.
+	 
+	fluxo de um ticket:
+		fluxograma no draw.io
+		
+	
+	Funcionalidades propostas:
+		criação de ticket:
+			cria uma instancia do struct ticket e atribui-lhe os valores iniciais
+		
+		Atualização de ticket (atendimento):
+			Atribuição da data-atendimento
+			
+		Seleção de Balcão:
+			Selecionar o balcão com menos clientes atribuídos
+			
+		Atualização das stats do balcão:
+			VARIAVEIS GERAIS?
+			adicionar counter +1
+			
+		Gerar n Tickets aleatórios:
+			Para testar reports sem introdução manual
+			
+		Atender Automáticamente Tickets
+		
+		
+			
+		
