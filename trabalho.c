@@ -12,6 +12,11 @@ typedef struct {
     int balcoes[3];
 } tipoTicket;
 
+tipoTicket tiposTicket[2] = {
+    {"Urgência",{3}},
+    {"Marcada",{1, 2, 3}}
+    };
+
 tipoTicket urgencia = {"Urgência",{3}};
 tipoTicket marcada = {"Marcada",{1, 2, 3}};
 
@@ -21,10 +26,12 @@ typedef struct {
     float valorConsulta; // Valor Tabelado por consulta
 } especialidade;
 
-especialidade cardiologia = {"Cardiologia", {"Dr. João", "Dra. Maria", "Dr. Silva", "Dra. Clara"}, 85.90};
-especialidade dermatologia = {"Dermatologia", {"Dr. Pedro", "Dra. Ana", "Dr. Luís", "Dra. Paula"}, 25.50};
-especialidade ortopedia = {"Ortopedia", {"Dr. Ricardo", "Dra. Vanessa", "Dr. Carlos", "Dra. Sofia"}, 40.00};
-especialidade pediatria = {"Pediatria", {"Dra. Helena", "Dr. Gabriel", "Dra. Júlia", "Dr. Mateus"}, 15.50};
+especialidade listaEspecialidades[4] = {
+    {"cardiologia", {"Dr. João", "Dra. Maria", "Dr. Silva", "Dra. Clara"}, 85.90},
+    {"dermatologia", {"Dr. Pedro", "Dra. Ana", "Dr. Luís", "Dra. Paula"}, 25.50},
+    {"ortopedia", {"Dr. Ricardo", "Dra. Vanessa", "Dr. Carlos", "Dra. Sofia"}, 40.00},
+    {"pediatria", {"Dra. Helena", "Dr. Gabriel", "Dra. Júlia", "Dr. Mateus"}, 15.50}
+};
 
 struct ticket {
     int id;
@@ -38,8 +45,6 @@ struct ticket {
     float valorPagar;
 };
 
-especialidade listaEspecialidades[4] = {"cardiologia", "dermatologia", "ortopedia", "pediatria"};
-
 // Função para criar um ticket
 struct ticket criarTicket(int id, tipoTicket tipo) {
     struct ticket novoTicket;
@@ -47,11 +52,11 @@ struct ticket criarTicket(int id, tipoTicket tipo) {
     novoTicket.dataCriacao = time(NULL); // Atribui o timestamp atual
     novoTicket.dataAtendimento = 0;     // Não atendido ainda
     novoTicket.medico[0] = '\0';        // Inicializa como vazio
-    novoTicket.especialidade = cardiologia;
+    novoTicket.especialidade = listaEspecialidades[3];
     novoTicket.gabinete = 0;
 
     // Comparar o nome do tipo para decidir o balcão
-    if (strcmp(tipo.nome, "Urgência") == 0) {
+    if (strcmp(tipo.nome, tiposTicket[0].nome) == 0) {
         novoTicket.balcao = 3; // Balcão fixo para urgências
         novoTicket.valorPagar = 0.0;
     } else {
@@ -81,8 +86,8 @@ void main(){
  //   tipoTicket urgencia = {"Urgência", {3}};
 
     // Criar tickets
-    struct ticket t1 = criarTicket(1, marcada);
-    struct ticket t2 = criarTicket(2, urgencia);
+    struct ticket t1 = criarTicket(1, tiposTicket[1]);
+    struct ticket t2 = criarTicket(2, tiposTicket[0]);
 
     // Imprimir resultados
     printf("Ticket 1 - Tipo: %s, Balcão: %d, Custo: %.2f\n", t1.tipo.nome, t1.balcao, t1.valorPagar);
