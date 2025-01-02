@@ -93,9 +93,28 @@ struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual) {
 void editarValorPagarTicket (struct ticket listaTickets[], int n, const char *id, float novoValorPagar){
     ///Função para Editar Valor a Pagar de um Ticket, search feito pelo ID do Ticket
     for (int i = 0; i<n; i++){
-        if (strcmp(listaTickets[i].id, id) == 0) { //Condição para encontrar Ticket com base no ID
+        if (strcmp(listaTickets[i].id, id) == 0){ //Condição para encontrar Ticket com base no ID
             printf("\nTicket encontrado: %s\n", listaTickets[i].id);
-            listaTickets[i].valorPagar = novoValorPagar; // Atualizar valor a pagar
+            listaTickets[i].valorPagar = novoValorPagar; //Atualizar valor a pagar
+            printf("Dados atualizados com sucesso.\n");
+            return;
+        }
+    }
+    printf("Ticket %s não encontrado.\n", id);
+};
+
+void editarEspecialidadeTicket (struct ticket listaTickets[], int n, const char *id, especialidade novaEspecialidade){
+    ///Função para Editar a Especialidade de um Ticket, atribuir aleatóriamente um médico da Especialidade e um balcão aleatório, search feito pelo ID do Ticket
+    for (int i = 0; i<n; i++){
+        if (strcmp(listaTickets[i].id, id) == 0){ //Condição para encontrar Ticket com base no ID
+            printf("\nTicket encontrado: %s\n", listaTickets[i].id);
+            listaTickets[i].especialidade = novaEspecialidade; //Atualizar especialidade
+            strcpy(listaTickets[i].medico, listaTickets[i].especialidade.listaMedicos[gerarAleatorio(0, 3)]); //Copia do Array para a variável do tipo String
+            listaTickets[i].gabinete = gerarAleatorio (1, 50); //Selecionar Gabinete Aleatóriamente
+            if (strcmp(listaTickets[i].tipo.nome, tiposTicket[0].nome) == 0) //Caso seja urgência, valor a pagar será zero
+                listaTickets[i].valorPagar = 0.0;
+            else //Caso seja não urgência, valor a pagar será o atribuído na especialidade
+                listaTickets[i].valorPagar = listaTickets[i].especialidade.valorConsulta;
             printf("Dados atualizados com sucesso.\n");
             return;
         }
@@ -147,6 +166,7 @@ int main(){
     }
 
     //editarValorPagarTicket (listaTickets, quantidadeTickets, "A5", 110.50);
+    editarEspecialidadeTicket (listaTickets, quantidadeTickets, "C5", listaEspecialidades[0]);
 
     //Imprimir Tickets em Memória
     for (int i=0; i<quantidadeTickets; i++) imprimirTicket(listaTickets[i]);
