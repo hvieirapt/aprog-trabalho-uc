@@ -77,9 +77,7 @@ struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual) {
     for (int i = 0; i < 3; i++) if (tipo.balcoes[i] != NULL) numBalcoes++; //Contagem do Número de Balcões do Tipo Introduzido
     novoTicket.balcao = tipo.balcoes[gerarAleatorio (0, numBalcoes-1)];
     novoTicket.balcao->counter++; //Incrementar Counter do Balcão Selecionado
-    // Atribuir ID no formato "BalcãoNome+Counter"
-    sprintf(novoTicket.id, "%s%d", novoTicket.balcao->nome, novoTicket.balcao->counter);
-
+    sprintf(novoTicket.id, "%s%d", novoTicket.balcao->nome, novoTicket.balcao->counter); // Atribuir ID no formato "BalcãoNome+Counter"d
     novoTicket.dataCriacao = *dataAtual; // Atribui o timestamp atual
     *dataAtual = (*dataAtual + (gerarAleatorio (1, 7)) * 60); //Avançar Data Atual entre 1 a 7 minutos entre marcações
     novoTicket.especialidade = listaEspecialidades[gerarAleatorio (0, numEspecialidades-1)];
@@ -90,6 +88,19 @@ struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual) {
     else //Caso seja não urgência, valor a pagar será o atribuído na especialidade
         novoTicket.valorPagar = novoTicket.especialidade.valorConsulta;
     return novoTicket;
+};
+
+void editarValorPagarTicket (struct ticket listaTickets[], int n, const char *id, float novoValorPagar){
+    ///Função para Editar Valor a Pagar de um Ticket, search feito pelo ID do Ticket
+    for (int i = 0; i<n; i++){
+        if (strcmp(listaTickets[i].id, id) == 0) { //Condição para encontrar Ticket com base no ID
+            printf("\nTicket encontrado: %s\n", listaTickets[i].id);
+            listaTickets[i].valorPagar = novoValorPagar; // Atualizar valor a pagar
+            printf("Dados atualizados com sucesso.\n");
+            return;
+        }
+    }
+    printf("Ticket %s não encontrado.\n", id);
 };
 
 void criarTicketsAleatoriamente (struct ticket listaTickets[], int n, time_t *dataAtual){
@@ -105,13 +116,13 @@ void imprimirTicket(struct ticket t) {
     char buffer[20];
     struct tm *tm_info = localtime(&t.dataCriacao);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", tm_info);
-
     printf("Ticket: %s\t", t.id);
     printf("Tipo: %s\t", t.tipo.nome);
     printf("Balcão: %d (%s)\t", t.balcao->id, t.balcao->nome);
     printf("Data de Criação: %s\t", buffer);
     printf("Especialidade: %s\t", t.especialidade.nome);
     printf("Médico: %s\t", t.medico);
+    printf("Valor a Pagar: %.2f\t", t.valorPagar);
     printf("Gabinete: %d\n", t.gabinete);
 };
 
@@ -134,6 +145,11 @@ int main(){
         printf("%s : %d", listaBalcoes[i].nome, listaBalcoes[i].counter);
         if (i < 3-1) printf("\t|\t");
     }
+
+    //editarValorPagarTicket (listaTickets, quantidadeTickets, "A5", 110.50);
+
+    //Imprimir Tickets em Memória
+    for (int i=0; i<quantidadeTickets; i++) imprimirTicket(listaTickets[i]);
 
     return 0;
 };
