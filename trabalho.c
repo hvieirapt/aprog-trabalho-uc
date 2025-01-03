@@ -61,7 +61,11 @@ struct ticket {
     float valorPagar;
 };
 
-struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual) {
+void gerarDataAtendimento(struct ticket *t){
+    t->dataAtendimento = t->dataCriacao + gerarAleatorio(300, 14400); // Acrescenta à data de criação um valor aleatório em segundos entre 300 (5 minutos) e 14400 (4 horas)
+};
+
+struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual){
     /// Função para criar um ticket
     /*
         Balcão é selecionado aleatóriamente, limitado pelo tipo de Ticket introduzido.
@@ -79,6 +83,7 @@ struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual) {
     novoTicket.balcao->counter++; //Incrementar Counter do Balcão Selecionado
     sprintf(novoTicket.id, "%s%d", novoTicket.balcao->nome, novoTicket.balcao->counter); // Atribuir ID no formato "BalcãoNome+Counter"d
     novoTicket.dataCriacao = *dataAtual; // Atribui o timestamp atual
+    gerarDataAtendimento(&novoTicket);
     *dataAtual = (*dataAtual + (gerarAleatorio (1, 7)) * 60); //Avançar Data Atual entre 1 a 7 minutos entre marcações
     novoTicket.especialidade = listaEspecialidades[gerarAleatorio (0, numEspecialidades-1)];
     novoTicket.gabinete = gerarAleatorio (1, 50); //Selecionar Gabinete Aleatóriamente
@@ -130,15 +135,23 @@ void criarTicketsAleatoriamente (struct ticket listaTickets[], int n, time_t *da
     }
 };
 
-void imprimirTicket(struct ticket t) {
+void imprimirTicket(struct ticket t){
 /// Função para exibir um ticket
-    char buffer[20];
-    struct tm *tm_info = localtime(&t.dataCriacao);
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", tm_info);
+    char bufferCriacao[20], bufferAtendimento[20];
+    struct tm *tm_info;
+
     printf("Ticket: %s\t", t.id);
     printf("Tipo: %s\t", t.tipo.nome);
     printf("Balcão: %d (%s)\t", t.balcao->id, t.balcao->nome);
-    printf("Data de Criação: %s\t", buffer);
+
+    tm_info = localtime(&t.dataCriacao);
+    strftime(bufferCriacao, sizeof(bufferCriacao), "%Y-%m-%d %H:%M", tm_info);
+    printf("Data de Criação: %s\t", bufferCriacao);
+
+    tm_info = localtime(&t.dataAtendimento);
+    strftime(bufferAtendimento, sizeof(bufferAtendimento), "%Y-%m-%d %H:%M", tm_info);
+    printf("Data de Atendimento: %s\t", bufferAtendimento);
+
     printf("Especialidade: %s\t", t.especialidade.nome);
     printf("Médico: %s\t", t.medico);
     printf("Valor a Pagar: %.2f\t", t.valorPagar);
@@ -166,10 +179,8 @@ int main(){
     }
 
     //editarValorPagarTicket (listaTickets, quantidadeTickets, "A5", 110.50);
-    editarEspecialidadeTicket (listaTickets, quantidadeTickets, "C5", listaEspecialidades[0]);
+    //editarEspecialidadeTicket (listaTickets, quantidadeTickets, "C5", listaEspecialidades[0]);
 
-    //Imprimir Tickets em Memória
-    for (int i=0; i<quantidadeTickets; i++) imprimirTicket(listaTickets[i]);
 
     return 0;
 };
