@@ -4,43 +4,42 @@
 #include <time.h>
 #include <locale.h>
 
-int gerarAleatorio (int min, int max){
-/// Função retorna um número entre min e max considerando tambem as extremidades.
-    return rand() % (max - min + 1) + min;;
+int gerarAleatorio(int min, int max) {
+    return rand() % (max - min + 1) + min;
 };
 
-///Struct Balcão
+// Struct Balcão
 typedef struct {
-    char nome[10];  //Nome Descritivo
-    int id;         //ID
-    int counter;    //Contador
+    char nome[10];
+    int id;
+    int counter;
 } balcao;
-//Lista Balcões
+
 balcao listaBalcoes[3] = {
     {"A", 1, 0},
     {"B", 2, 0},
-    {"C", 3, 0} //Balcão 3: Apenas Urgências
+    {"C", 3, 0} // Balcão 3: Apenas Urgências
 };
 
-///Struct Tipo Ticket
+// Struct Tipo Ticket
 typedef struct {
-    char nome[10];  //Nome Descritivo
-    balcao *balcoes[3]; //Lista Balcões Permitidos
+    char nome[10];
+    balcao* balcoes[3];
 } tipoTicket;
-//Lista Tipos Ticket
+
 tipoTicket tiposTicket[2] = {
-    {"Urgência",{&listaBalcoes[2],NULL ,NULL}},
-    {"Marcada",{&listaBalcoes[0],&listaBalcoes[1],&listaBalcoes[2]}}
+    {"Urgência", {&listaBalcoes[2], NULL, NULL}},
+    {"Marcada", {&listaBalcoes[0], &listaBalcoes[1], &listaBalcoes[2]}}
 };
 
-///Struct Especialidade
+// Struct Especialidade
 typedef struct {
     char nome[20];
-    char listaMedicos[4][50]; // Nome médicos
-    float valorConsulta; // Valor Tabelado por consulta
+    char listaMedicos[4][50];
+    float valorConsulta;
 } especialidade;
-//Lista Especialidades
-int numEspecialidades = 4; //Quantidade para randomizer
+
+int numEspecialidades = 4;
 especialidade listaEspecialidades[4] = {
     {"Cardiologia", {"Dr. João", "Dra. Maria", "Dr. Silva", "Dra. Clara"}, 85.90},
     {"Dermatologia", {"Dr. Pedro", "Dra. Ana", "Dr. Luís", "Dra. Paula"}, 25.50},
@@ -48,97 +47,75 @@ especialidade listaEspecialidades[4] = {
     {"Pediatria", {"Dra. Helena", "Dr. Gabriel", "Dra. Júlia", "Dr. Mateus"}, 15.50}
 };
 
-//Struct Ticket
+// Struct Ticket
 struct ticket {
     char id[15];
     tipoTicket tipo;
     time_t dataCriacao;
     time_t dataAtendimento;
-    balcao *balcao; //Pointer para o balcão
+    balcao* balcao;
     char medico[50];
     especialidade especialidade;
     int gabinete;
     float valorPagar;
 };
 
-void gerarDataAtendimento(struct ticket *t){
-    t->dataAtendimento = t->dataCriacao + gerarAleatorio(300, 14400); // Acrescenta à data de criação um valor aleatório em segundos entre 300 (5 minutos) e 14400 (4 horas)
+void gerarDataAtendimento(struct ticket* t) {
+    t->dataAtendimento = t->dataCriacao + gerarAleatorio(300, 14400);
 };
 
-struct ticket criarTicket (tipoTicket tipo, time_t *dataAtual){
-    /// Função para criar um ticket
-    /*
-        Balcão é selecionado aleatóriamente, limitado pelo tipo de Ticket introduzido.
-        ID é atribuído sequencialmente com base no balcão selecionado.
-        Especialidade é selecionada aleatóriamente.
-        Gabinete é selecionado aleatóriamente.
-        Médico é selecionado aleatóriamente, limitado pela especialidade.
-        Valor a Pagar é tabelado na especialidade.
-    */
+time_t stringParaTimeT(const char* dataStr) {
+    struct tm tm = {0};
+
+    if (sscanf(dataStr, "%4d-%2d-%2d %2d:%2d",
+               &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
+               &tm.tm_hour, &tm.tm_min) != 5) {
+        return (time_t)-1;
+    }
+
+    tm.tm_year -= 1900;
+    tm.tm_mon -= 1;
+
+    return mktime(&tm);
+}
+
+struct ticket criarTicket(tipoTicket tipo, time_t* dataAtual) {
     struct ticket novoTicket;
     novoTicket.tipo = tipo;
     int numBalcoes = 0;
-    for (int i = 0; i < 3; i++) if (tipo.balcoes[i] != NULL) numBalcoes++; //Contagem do Número de Balcões do Tipo Introduzido
-    novoTicket.balcao = tipo.balcoes[gerarAleatorio (0, numBalcoes-1)];
-    novoTicket.balcao->counter++; //Incrementar Counter do Balcão Selecionado
-    sprintf(novoTicket.id, "%s%d", novoTicket.balcao->nome, novoTicket.balcao->counter); // Atribuir ID no formato "BalcãoNome+Counter"d
-    novoTicket.dataCriacao = *dataAtual; // Atribui o timestamp atual
+
+    for (int i = 0; i < 3; i++) {
+        if (tipo.balcoes[i] != NULL) numBalcoes++;
+    }
+
+    novoTicket.balcao = tipo.balcoes[gerarAleatorio(0, numBalcoes - 1)];
+    novoTicket.balcao->counter++;
+    sprintf(novoTicket.id, "%s%d", novoTicket.balcao->nome, novoTicket.balcao->counter);
+    novoTicket.dataCriacao = *dataAtual;
     gerarDataAtendimento(&novoTicket);
-    *dataAtual = (*dataAtual + (gerarAleatorio (1, 7)) * 60); //Avançar Data Atual entre 1 a 7 minutos entre marcações
-    novoTicket.especialidade = listaEspecialidades[gerarAleatorio (0, numEspecialidades-1)];
-    novoTicket.gabinete = gerarAleatorio (1, 50); //Selecionar Gabinete Aleatóriamente
-    strcpy(novoTicket.medico, novoTicket.especialidade.listaMedicos[gerarAleatorio(0, 3)]); //Copia do Array para a variável do tipo String
-    if (strcmp(tipo.nome, tiposTicket[0].nome) == 0) //Caso seja urgência, valor a pagar será zero
+    *dataAtual += gerarAleatorio(1, 7) * 60;
+    novoTicket.especialidade = listaEspecialidades[gerarAleatorio(0, numEspecialidades - 1)];
+    novoTicket.gabinete = gerarAleatorio(1, 50);
+    strcpy(novoTicket.medico, novoTicket.especialidade.listaMedicos[gerarAleatorio(0, 3)]);
+
+    if (strcmp(tipo.nome, tiposTicket[0].nome) == 0)
         novoTicket.valorPagar = 0.0;
-    else //Caso seja não urgência, valor a pagar será o atribuído na especialidade
+    else
         novoTicket.valorPagar = novoTicket.especialidade.valorConsulta;
+
     return novoTicket;
 };
 
-void editarValorPagarTicket (struct ticket listaTickets[], int n, const char *id, float novoValorPagar){
-    ///Função para Editar Valor a Pagar de um Ticket, search feito pelo ID do Ticket
-    for (int i = 0; i<n; i++){
-        if (strcmp(listaTickets[i].id, id) == 0){ //Condição para encontrar Ticket com base no ID
-            printf("\nTicket encontrado: %s\n", listaTickets[i].id);
-            listaTickets[i].valorPagar = novoValorPagar; //Atualizar valor a pagar
-            printf("Dados atualizados com sucesso.\n");
-            return;
-        }
-    }
-    printf("Ticket %s não encontrado.\n", id);
-};
-
-void editarEspecialidadeTicket (struct ticket listaTickets[], int n, const char *id, especialidade novaEspecialidade){
-    ///Função para Editar a Especialidade de um Ticket, atribuir aleatóriamente um médico da Especialidade e um balcão aleatório, search feito pelo ID do Ticket
-    for (int i = 0; i<n; i++){
-        if (strcmp(listaTickets[i].id, id) == 0){ //Condição para encontrar Ticket com base no ID
-            printf("\nTicket encontrado: %s\n", listaTickets[i].id);
-            listaTickets[i].especialidade = novaEspecialidade; //Atualizar especialidade
-            strcpy(listaTickets[i].medico, listaTickets[i].especialidade.listaMedicos[gerarAleatorio(0, 3)]); //Copia do Array para a variável do tipo String
-            listaTickets[i].gabinete = gerarAleatorio (1, 50); //Selecionar Gabinete Aleatóriamente
-            if (strcmp(listaTickets[i].tipo.nome, tiposTicket[0].nome) == 0) //Caso seja urgência, valor a pagar será zero
-                listaTickets[i].valorPagar = 0.0;
-            else //Caso seja não urgência, valor a pagar será o atribuído na especialidade
-                listaTickets[i].valorPagar = listaTickets[i].especialidade.valorConsulta;
-            printf("Dados atualizados com sucesso.\n");
-            return;
-        }
-    }
-    printf("Ticket %s não encontrado.\n", id);
-};
-
-void criarTicketsAleatoriamente (struct ticket listaTickets[], int n, time_t *dataAtual){
-    ///Wrapper para Criar Lista de n Tickets e Gerar os seus Atendimentos Aleatóriamente
-    for (int i=0; i<n; i++){
-        struct ticket novoTicket = criarTicket (tiposTicket[gerarAleatorio (0, 1)], dataAtual);
-        listaTickets[i] = novoTicket; //Atribuir Novo Ticket à lista em Memória
+void criarTicketsAleatoriamente(struct ticket listaTickets[], int n, time_t* dataAtual) {
+    for (int i = 0; i < n; i++) {
+        struct ticket novoTicket = criarTicket(tiposTicket[gerarAleatorio(0, 1)], dataAtual);
+        listaTickets[i] = novoTicket;
     }
 };
 
-void imprimirTicket(struct ticket t){
-/// Função para exibir um ticket
+void imprimirTicket(struct ticket t) {
     char bufferCriacao[20], bufferAtendimento[20];
-    struct tm *tm_info;
+    struct tm* tm_info;
 
     printf("Ticket: %s\t", t.id);
     printf("Tipo: %s\t", t.tipo.nome);
@@ -158,29 +135,93 @@ void imprimirTicket(struct ticket t){
     printf("Gabinete: %d\n", t.gabinete);
 };
 
-int main(){
-    setlocale(LC_ALL, ""); // Usa a configuração de localidade do sistema
-    srand(time(NULL));
-    time_t dataAtual = time(NULL); //Data atual para simular progressão do tempo
-
-    int quantidadeTickets = 30; //Tickets a Gerar
-    struct ticket listaTickets[30]; //Lista Tickets em Memória
-
-    criarTicketsAleatoriamente (listaTickets, quantidadeTickets, &dataAtual);
-
-
-    //Imprimir Tickets em Memória
-    for (int i=0; i<quantidadeTickets; i++) imprimirTicket(listaTickets[i]);
-
-    //Imprimir Counter Balcões
-    for (int i=0; i<3; i++){
-        printf("%s : %d", listaBalcoes[i].nome, listaBalcoes[i].counter);
-        if (i < 3-1) printf("\t|\t");
+struct ticket* filtrarTicketsPorIntervalo(struct ticket listaTickets[], int n, time_t dataInicio, time_t dataFim, int* quantidadeFiltrada) {
+    struct ticket* ticketsFiltrados = malloc(n * sizeof(struct ticket));
+    if (!ticketsFiltrados) {
+        printf("Erro ao alocar memória para tickets filtrados.\n");
+        exit(EXIT_FAILURE);
     }
 
-    //editarValorPagarTicket (listaTickets, quantidadeTickets, "A5", 110.50);
-    //editarEspecialidadeTicket (listaTickets, quantidadeTickets, "C5", listaEspecialidades[0]);
+    *quantidadeFiltrada = 0;
 
+    for (int i = 0; i < n; i++) {
+        if (listaTickets[i].dataAtendimento >= dataInicio && listaTickets[i].dataAtendimento <= dataFim) {
+            ticketsFiltrados[*quantidadeFiltrada] = listaTickets[i];
+            (*quantidadeFiltrada)++;
+        }
+    }
 
+    ticketsFiltrados = realloc(ticketsFiltrados, (*quantidadeFiltrada) * sizeof(struct ticket));
+    if (!ticketsFiltrados && *quantidadeFiltrada > 0) {
+        printf("Erro ao redimensionar memória para tickets filtrados.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return ticketsFiltrados;
+}
+
+void limparBufferEntrada() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+struct ticket* obterTicketsFiltrados(struct ticket listaTickets[], int n, int* quantidadeFiltrada) {
+    char dataInicioStr[20], dataFimStr[20];
+    time_t dataInicio, dataFim;
+
+    while (1) {
+        printf("Insira a data inicial (formato YYYY-MM-DD HH:MM): ");
+        if (scanf(" %[^\n]", dataInicioStr) != 1) {
+            printf("Erro: Entrada inválida. Tente novamente.\n");
+            limparBufferEntrada();
+            continue;
+        }
+
+        dataInicio = stringParaTimeT(dataInicioStr);
+        if (dataInicio != (time_t)-1) break;
+
+        printf("Erro: Formato inválido. Tente novamente.\n");
+    }
+
+    while (1) {
+        printf("Insira a data final (formato YYYY-MM-DD HH:MM): ");
+        if (scanf(" %[^\n]", dataFimStr) != 1) {
+            printf("Erro: Entrada inválida. Tente novamente.\n");
+            limparBufferEntrada();
+            continue;
+        }
+
+        dataFim = stringParaTimeT(dataFimStr);
+        if (dataFim != (time_t)-1 && dataFim > dataInicio) break;
+
+        printf("Erro: Formato inválido ou data final anterior à inicial. Tente novamente.\n");
+    }
+
+    return filtrarTicketsPorIntervalo(listaTickets, n, dataInicio, dataFim, quantidadeFiltrada);
+}
+
+int main() {
+    setlocale(LC_ALL, "");
+    srand(time(NULL));
+    time_t dataAtual = time(NULL);
+
+    int quantidadeTickets = 30;
+    struct ticket listaTickets[30];
+
+    criarTicketsAleatoriamente(listaTickets, quantidadeTickets, &dataAtual);
+
+    for (int i = 0; i < quantidadeTickets; i++) {
+        imprimirTicket(listaTickets[i]);
+    }
+
+    int quantidadeFiltrada;
+    struct ticket* ticketsFiltrados = obterTicketsFiltrados(listaTickets, quantidadeTickets, &quantidadeFiltrada);
+
+    printf("Tickets filtrados (%d encontrados):\n", quantidadeFiltrada);
+    for (int i = 0; i < quantidadeFiltrada; i++) {
+        imprimirTicket(ticketsFiltrados[i]);
+    }
+
+    free(ticketsFiltrados);
     return 0;
-};
+}
