@@ -8,8 +8,8 @@ int gerarAleatorio(int min, int max) {
     return rand() % (max - min + 1) + min;
 };
 
-// Struct Balcão
 typedef struct {
+// Struct Balcão
     char nome[10];
     int id;
     int counter;
@@ -21,8 +21,8 @@ balcao listaBalcoes[3] = {
     {"C", 3, 0} // Balcão 3: Apenas Urgências
 };
 
-// Struct Tipo Ticket
 typedef struct {
+// Struct Tipo Ticket
     char nome[10];
     balcao* balcoes[3];
 } tipoTicket;
@@ -32,8 +32,8 @@ tipoTicket tiposTicket[2] = {
     {"Marcada", {&listaBalcoes[0], &listaBalcoes[1], &listaBalcoes[2]}}
 };
 
-// Struct Especialidade
 typedef struct {
+// Struct Especialidade
     char nome[20];
     char listaMedicos[4][50];
     float valorConsulta;
@@ -47,8 +47,8 @@ especialidade listaEspecialidades[4] = {
     {"Pediatria", {"Dra. Helena", "Dr. Gabriel", "Dra. Júlia", "Dr. Mateus"}, 15.50}
 };
 
-// Struct Ticket
 struct ticket {
+// Struct Ticket
     char id[15];
     tipoTicket tipo;
     time_t dataCriacao;
@@ -77,7 +77,7 @@ time_t stringParaTimeT(const char* dataStr) {
     tm.tm_mon -= 1;
 
     return mktime(&tm);
-}
+};
 
 struct ticket criarTicket(tipoTicket tipo, time_t* dataAtual) {
     struct ticket novoTicket;
@@ -135,6 +135,12 @@ void imprimirTicket(struct ticket t) {
     printf("Gabinete: %d\n", t.gabinete);
 };
 
+void imprimirListaTickets (struct ticket listaTickets[], int n){
+    for (int i = 0; i<n; i++) {
+        imprimirTicket(listaTickets[i]);
+    }
+};
+
 struct ticket* filtrarTicketsPorIntervalo(struct ticket listaTickets[], int n, time_t dataInicio, time_t dataFim, int* quantidadeFiltrada) {
     struct ticket* ticketsFiltrados = malloc(n * sizeof(struct ticket));
     if (!ticketsFiltrados) {
@@ -158,12 +164,12 @@ struct ticket* filtrarTicketsPorIntervalo(struct ticket listaTickets[], int n, t
     }
 
     return ticketsFiltrados;
-}
+};
 
 void limparBufferEntrada() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
-}
+};
 
 struct ticket* obterTicketsFiltrados(struct ticket listaTickets[], int n, int* quantidadeFiltrada) {
     char dataInicioStr[20], dataFimStr[20];
@@ -198,7 +204,7 @@ struct ticket* obterTicketsFiltrados(struct ticket listaTickets[], int n, int* q
     }
 
     return filtrarTicketsPorIntervalo(listaTickets, n, dataInicio, dataFim, quantidadeFiltrada);
-}
+};
 
 int main() {
     setlocale(LC_ALL, "");
@@ -210,18 +216,15 @@ int main() {
 
     criarTicketsAleatoriamente(listaTickets, quantidadeTickets, &dataAtual);
 
-    for (int i = 0; i < quantidadeTickets; i++) {
-        imprimirTicket(listaTickets[i]);
-    }
+    imprimirListaTickets (listaTickets, quantidadeTickets);
 
     int quantidadeFiltrada;
     struct ticket* ticketsFiltrados = obterTicketsFiltrados(listaTickets, quantidadeTickets, &quantidadeFiltrada);
 
     printf("Tickets filtrados (%d encontrados):\n", quantidadeFiltrada);
-    for (int i = 0; i < quantidadeFiltrada; i++) {
-        imprimirTicket(ticketsFiltrados[i]);
-    }
+
+    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
 
     free(ticketsFiltrados);
     return 0;
-}
+};
