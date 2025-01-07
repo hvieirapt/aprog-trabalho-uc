@@ -9,7 +9,7 @@ int gerarAleatorio(int min, int max) {
 };
 
 typedef struct {
-// Struct Balcão
+    // Struct Balcão
     char nome[10];
     int id;
     int counter;
@@ -22,7 +22,7 @@ balcao listaBalcoes[3] = {
 };
 
 typedef struct {
-// Struct Tipo Ticket
+    // Struct Tipo Ticket
     char nome[10];
     balcao* balcoes[3];
 } tipoTicket;
@@ -33,7 +33,7 @@ tipoTicket tiposTicket[2] = {
 };
 
 typedef struct {
-// Struct Especialidade
+    // Struct Especialidade
     char nome[20];
     char listaMedicos[4][50];
     float valorConsulta;
@@ -48,7 +48,7 @@ especialidade listaEspecialidades[4] = {
 };
 
 struct ticket {
-// Struct Ticket
+    // Struct Ticket
     char id[15];
     tipoTicket tipo;
     time_t dataCriacao;
@@ -84,9 +84,7 @@ struct ticket criarTicket(tipoTicket tipo, time_t* dataAtual) {
     novoTicket.tipo = tipo;
     int numBalcoes = 0;
 
-    for (int i = 0; i < 3; i++) {
-        if (tipo.balcoes[i] != NULL) numBalcoes++;
-    }
+    for (int i = 0; i < 3; i++) if (tipo.balcoes[i] != NULL) numBalcoes++;
 
     novoTicket.balcao = tipo.balcoes[gerarAleatorio(0, numBalcoes - 1)];
     novoTicket.balcao->counter++;
@@ -98,10 +96,8 @@ struct ticket criarTicket(tipoTicket tipo, time_t* dataAtual) {
     novoTicket.gabinete = gerarAleatorio(1, 50);
     strcpy(novoTicket.medico, novoTicket.especialidade.listaMedicos[gerarAleatorio(0, 3)]);
 
-    if (strcmp(tipo.nome, tiposTicket[0].nome) == 0)
-        novoTicket.valorPagar = 0.0;
-    else
-        novoTicket.valorPagar = novoTicket.especialidade.valorConsulta;
+    if (strcmp(tipo.nome, tiposTicket[0].nome) == 0) novoTicket.valorPagar = 0.0;
+    else novoTicket.valorPagar = novoTicket.especialidade.valorConsulta;
 
     return novoTicket;
 };
@@ -117,31 +113,99 @@ void imprimirTicket(struct ticket t) {
     char bufferCriacao[20], bufferAtendimento[20];
     struct tm* tm_info;
 
-    printf("Ticket: %s\t", t.id);
+    printf("Id: %s\t", t.id);
     printf("Tipo: %s\t", t.tipo.nome);
-    printf("Balcão: %d (%s)\t", t.balcao->id, t.balcao->nome);
+    //printf("Balcão: %d (%s)\t", t.balcao->id, t.balcao->nome);
 
     tm_info = localtime(&t.dataCriacao);
     strftime(bufferCriacao, sizeof(bufferCriacao), "%Y-%m-%d %H:%M", tm_info);
-    printf("Data de Criação: %s\t", bufferCriacao);
+    printf("Entrada: %s\t", bufferCriacao);
 
     tm_info = localtime(&t.dataAtendimento);
     strftime(bufferAtendimento, sizeof(bufferAtendimento), "%Y-%m-%d %H:%M", tm_info);
-    printf("Data de Atendimento: %s\t", bufferAtendimento);
+    printf("Atendimento: %s\t", bufferAtendimento);
 
     printf("Especialidade: %s\t", t.especialidade.nome);
-    printf("Médico: %s\t", t.medico);
+    //printf("Médico: %s\t", t.medico);
     printf("Valor a Pagar: %.2f\t", t.valorPagar);
     printf("Gabinete: %d\n", t.gabinete);
 };
 
-void imprimirListaTickets (struct ticket listaTickets[], int n){
-    for (int i = 0; i<n; i++) {
-        imprimirTicket(listaTickets[i]);
-    }
-};
+void imprimirTicketDetalhado(struct ticket listaTickets[], int n) {
+    char id[15];
+    printf("Digite o ID do ticket para ver os detalhes: ");
+    scanf("%s", id);
 
-struct ticket* filtrarTicketsPorIntervalo(struct ticket listaTickets[], int n, time_t dataInicio, time_t dataFim, int* quantidadeFiltrada) {
+    for (int i = 0; i < n; i++) {
+        if (strcmp(listaTickets[i].id, id) == 0) {
+            printf("\n#### DETALHES DO TICKET ####\n");
+            printf("ID: %s\n", listaTickets[i].id);
+            printf("Tipo: %s\n", listaTickets[i].tipo.nome);
+            printf("Balcão: %d (%s)\n", listaTickets[i].balcao->id, listaTickets[i].balcao->nome);
+
+            char bufferCriacao[20], bufferAtendimento[20];
+            struct tm* tm_info;
+
+            tm_info = localtime(&listaTickets[i].dataCriacao);
+            strftime(bufferCriacao, sizeof(bufferCriacao), "%Y-%m-%d %H:%M", tm_info);
+            printf("Data de Criação: %s\n", bufferCriacao);
+
+            tm_info = localtime(&listaTickets[i].dataAtendimento);
+            strftime(bufferAtendimento, sizeof(bufferAtendimento), "%Y-%m-%d %H:%M", tm_info);
+            printf("Data de Atendimento: %s\n", bufferAtendimento);
+
+            printf("Especialidade: %s\n", listaTickets[i].especialidade.nome);
+            printf("Médico: %s\n", listaTickets[i].medico);
+            printf("Gabinete: %d\n", listaTickets[i].gabinete);
+            printf("Valor a Pagar: %.2f\n", listaTickets[i].valorPagar);
+            return;
+        }
+    }
+    printf("\nErro: Ticket com ID '%s' não encontrado.\n", id);
+}
+
+void imprimirListaTickets (struct ticket listaTickets[], int n){
+    printf("\n#### TICKETS EM MEMÓRIA (%d) ####\n", n);
+    for (int i = 0; i<n; i++) imprimirTicket(listaTickets[i]);
+}
+
+struct ticket* ticketsFiltradosNumIntervalo(struct ticket listaTickets[], int n, int* quantidadeFiltrada) {
+    /*
+    Recebe uma lista de Tickets
+    Pede input do intervalo de datas
+    Retorna a uma lista de Tickets contida no intervalo introduzido
+    */
+    char dataInicioStr[20], dataFimStr[20];
+    time_t dataInicio, dataFim;
+
+    while (1) {
+        printf("\nInsira a data inicial (formato YYYY-MM-DD HH:MM): ");
+        if (scanf(" %[^\n]", dataInicioStr) != 1) {
+            printf("Erro: Entrada inválida. Tente novamente.\n");
+            while (getchar() != '\n');
+            continue;
+        }
+
+        dataInicio = stringParaTimeT(dataInicioStr);
+        if (dataInicio != (time_t)-1) break;
+
+        printf("Erro: Formato inválido. Tente novamente.\n");
+    }
+
+    while (1) {
+        printf("\nInsira a data final (formato YYYY-MM-DD HH:MM): ");
+        if (scanf(" %[^\n]", dataFimStr) != 1) {
+            printf("Erro: Entrada inválida. Tente novamente.\n");
+            while (getchar() != '\n');
+            continue;
+        }
+
+        dataFim = stringParaTimeT(dataFimStr);
+        if (dataFim != (time_t)-1 && dataFim > dataInicio) break;
+
+        printf("Erro: Formato inválido ou data final anterior à inicial. Tente novamente.\n");
+    }
+
     struct ticket* ticketsFiltrados = malloc(n * sizeof(struct ticket));
     if (!ticketsFiltrados) {
         printf("Erro ao alocar memória para tickets filtrados.\n");
@@ -164,47 +228,73 @@ struct ticket* filtrarTicketsPorIntervalo(struct ticket listaTickets[], int n, t
     }
 
     return ticketsFiltrados;
-};
+}
 
-void limparBufferEntrada() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-};
+void mapaVolumeAtendidos (struct ticket listaTickets[], int n) {
+    ///Gerar mapas de volume de tickets atendidos, num intervalo de datas
 
-struct ticket* obterTicketsFiltrados(struct ticket listaTickets[], int n, int* quantidadeFiltrada) {
-    char dataInicioStr[20], dataFimStr[20];
-    time_t dataInicio, dataFim;
+    int quantidadeFiltrada;
+    struct ticket* ticketsFiltrados = ticketsFiltradosNumIntervalo(listaTickets, n, &quantidadeFiltrada);
+    printf("\n#### MAPA VOLUME ATENDIMENTO (%d Tickets Encontrados) ####\n", quantidadeFiltrada);
+    printf("\nLista Tickets Considerados:\n");
+    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
+    free(ticketsFiltrados);
+}
 
-    while (1) {
-        printf("Insira a data inicial (formato YYYY-MM-DD HH:MM): ");
-        if (scanf(" %[^\n]", dataInicioStr) != 1) {
-            printf("Erro: Entrada inválida. Tente novamente.\n");
-            limparBufferEntrada();
-            continue;
-        }
+void mapaReceitaGerada (struct ticket listaTickets[], int n) {
+    ///Gerar mapas de receitas de consultas marcadas, num intervalo de datas
 
-        dataInicio = stringParaTimeT(dataInicioStr);
-        if (dataInicio != (time_t)-1) break;
+    int quantidadeFiltrada;
+    struct ticket* ticketsFiltrados = ticketsFiltradosNumIntervalo(listaTickets, n, &quantidadeFiltrada);
+    printf("\n#### MAPA RECEITA GERADA (%d Tickets Encontrados) ####\n", quantidadeFiltrada);
+    float totalReceita = 0.0;
+    for (int i=0; i<quantidadeFiltrada; i++) totalReceita += ticketsFiltrados[i].valorPagar;
+    printf("\nLista Tickets Considerados:\n");
+    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
+    printf("\n-> Total de receita gerada no intervalo pedido: %.2f\n", totalReceita);
+    free(ticketsFiltrados);
+}
 
-        printf("Erro: Formato inválido. Tente novamente.\n");
+void mapaMediaAtendimento(struct ticket listaTickets[], int n) {
+    ///Gerar mapas de médias de espera entre atendimento, num intervalo de datas
+
+    int quantidadeFiltrada;
+    struct ticket* ticketsFiltrados = ticketsFiltradosNumIntervalo(listaTickets, n, &quantidadeFiltrada);
+    float somaEspera = 0.0;
+
+    for (int i=0; i<quantidadeFiltrada; i++) somaEspera += (float)difftime(ticketsFiltrados[i].dataAtendimento, ticketsFiltrados[i].dataCriacao) / 60;
+
+    float mediaEspera = somaEspera / quantidadeFiltrada;
+
+    printf("\n#### MAPA TEMPO MÉDIO ATENDIMENTO (%d Tickets Encontrados) ####\n", quantidadeFiltrada);
+    printf("\nLista Tickets Considerados:\n");
+    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
+    printf("\n-> Média de espera para atendimento: %.2f minutos\n", mediaEspera);
+    free(ticketsFiltrados);
+}
+
+void mapaProdutividadeBalcoes(struct ticket listaTickets[], int n) {
+    ///Gerar mapas de balcões mais e menos produtivos, num intervalo de datas
+
+    int quantidadeFiltrada;
+    struct ticket* ticketsFiltrados = ticketsFiltradosNumIntervalo(listaTickets, n, &quantidadeFiltrada);
+    int contadores[3] = {0, 0, 0};
+
+    for (int i = 0; i < quantidadeFiltrada; i++) contadores[ticketsFiltrados[i].balcao->id - 1]++;
+
+    int maisProdutivo = 0, menosProdutivo = 0;
+    for (int i = 1; i < 3; i++) {
+        if (contadores[i] > contadores[maisProdutivo]) maisProdutivo = i;
+        if (contadores[i] < contadores[menosProdutivo]) menosProdutivo = i;
     }
 
-    while (1) {
-        printf("Insira a data final (formato YYYY-MM-DD HH:MM): ");
-        if (scanf(" %[^\n]", dataFimStr) != 1) {
-            printf("Erro: Entrada inválida. Tente novamente.\n");
-            limparBufferEntrada();
-            continue;
-        }
-
-        dataFim = stringParaTimeT(dataFimStr);
-        if (dataFim != (time_t)-1 && dataFim > dataInicio) break;
-
-        printf("Erro: Formato inválido ou data final anterior à inicial. Tente novamente.\n");
-    }
-
-    return filtrarTicketsPorIntervalo(listaTickets, n, dataInicio, dataFim, quantidadeFiltrada);
-};
+    printf("\n#### MAPA PRODUTIVIDADE BALCÕES (%d Tickets Encontrados) ####\n", quantidadeFiltrada);
+    printf("\nLista Tickets Considerados:\n");
+    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
+    printf("\n-> Balcão mais produtivo: %s (%d) (%d tickets atendidos)", listaBalcoes[maisProdutivo].nome, listaBalcoes[maisProdutivo].id, contadores[maisProdutivo]);
+    printf("\n-> Balcão menos produtivo: %s (%d) (%d tickets atendidos)\n", listaBalcoes[menosProdutivo].nome, listaBalcoes[menosProdutivo].id, contadores[menosProdutivo]);
+    free(ticketsFiltrados);
+}
 
 int main() {
     setlocale(LC_ALL, "");
@@ -218,13 +308,15 @@ int main() {
 
     imprimirListaTickets (listaTickets, quantidadeTickets);
 
-    int quantidadeFiltrada;
-    struct ticket* ticketsFiltrados = obterTicketsFiltrados(listaTickets, quantidadeTickets, &quantidadeFiltrada);
+    //mapaVolumeAtendidos (listaTickets, quantidadeTickets);
 
-    printf("Tickets filtrados (%d encontrados):\n", quantidadeFiltrada);
+    //mapaReceitaGerada (listaTickets, quantidadeTickets);
 
-    imprimirListaTickets (ticketsFiltrados, quantidadeFiltrada);
+    //mapaMediaAtendimento (listaTickets, quantidadeTickets);
 
-    free(ticketsFiltrados);
+    mapaProdutividadeBalcoes (listaTickets, quantidadeTickets);
+
+    //imprimirTicketDetalhado(listaTickets, quantidadeTickets);
+
     return 0;
-};
+}
