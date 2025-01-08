@@ -21,6 +21,12 @@ balcao listaBalcoes[3] = {
     {"C", 3, 0} // Balcão 3: Apenas Urgências
 };
 
+int somaContadoresBalcoes() {
+    int soma = 0;
+    for (int i=0; i<3; i++) soma += listaBalcoes[i].counter;
+    return soma;
+}
+
 typedef struct {
     // Struct Tipo Ticket
     char nome[10];
@@ -102,12 +108,12 @@ struct ticket criarTicket(tipoTicket tipo, time_t* dataAtual) {
     return novoTicket;
 };
 
-void criarTicketsAleatoriamente(struct ticket listaTickets[], int n, time_t* dataAtual) {
+void criarTicketsAleatoriamente(struct ticket listaTickets[], int inicio, int n, time_t* dataAtual) {
     for (int i = 0; i < n; i++) {
         struct ticket novoTicket = criarTicket(tiposTicket[gerarAleatorio(0, 1)], dataAtual);
-        listaTickets[i] = novoTicket;
+        listaTickets[inicio + i] = novoTicket;
     }
-};
+}
 
 void imprimirTicket(struct ticket t) {
     char bufferCriacao[20], bufferAtendimento[20];
@@ -329,27 +335,132 @@ void mapaProdutividadeBalcoes(struct ticket listaTickets[], int n) {
     free(ticketsFiltrados);
 }
 
+
+void exibirMenu() {
+    // Função para exibir o menu principal
+    system("clear || cls"); // Limpa a tela (funciona no Linux e Windows)
+    printf("===============================================\n");
+    printf("       Simulador Atendimento Centro Saúde       \n");
+    printf("===============================================\n");
+    printf("Contadores de Atendimentos:\n");
+    for (int i = 0; i < 3; i++) printf("  Balcão %s: %d atendimentos\n", listaBalcoes[i].nome, listaBalcoes[i].counter);
+
+    printf("===============================================\n");
+    printf("Menu:\n");
+    printf("  1. Registar Tickets Aleatóriamente em Massa\n");
+    printf("  2. Registar Ticket Manualmente\n");
+    printf("  3. Visualizar Tickets em Memória\n");
+    printf("  4. Visualizar Detalhes de Ticket\n");
+    printf("  5. Mapas de Atendimento\n");
+    printf("  q. Sair\n");
+    printf("===============================================\n");
+}
+
+void esperarInput() {
+    // Função para esperar input do utilizador antes de continuar
+    printf("\nPressione ENTER para continuar...");
+    getchar(); // Consome o ENTER anterior
+    getchar(); // Aguarda o novo ENTER
+}
+
+
 int main() {
     setlocale(LC_ALL, "");
     srand(time(NULL));
     time_t dataAtual = time(NULL);
 
-    int quantidadeTickets = 30;
-    struct ticket listaTickets[30];
+    int quantidadeMaxTickets = 40; // Quantidade máxima permitida de tickets em memória
+    int quantidadeTickets = 0;    // Quantidade de tickets solicitados pelo utilizador
+    int totalTickets = 0;         // Total de tickets em memória
+    struct ticket listaTickets[40]; // Lista de Tickets em memória
 
-    criarTicketsAleatoriamente(listaTickets, quantidadeTickets, &dataAtual);
+    char escolha;
+    do {
+        exibirMenu();
+        printf("\nEscolha uma opção: ");
+        scanf(" %c", &escolha);
+        switch (escolha) {
+            case '1': {
+                printf("Quantos Tickets deseja gerar? (máx. %d): ", quantidadeMaxTickets - totalTickets);
+                scanf("%d", &quantidadeTickets);
 
-    imprimirListaTickets (listaTickets, quantidadeTickets);
+                // Soma os contadores atuais com o input do utilizador
+                int somaAtual = somaContadoresBalcoes();
+                if (somaAtual + quantidadeTickets > quantidadeMaxTickets) {
+                    printf("Erro: O total de tickets ultrapassa o máximo permitido (%d).\n", quantidadeMaxTickets);
+                } else {
+                    criarTicketsAleatoriamente(listaTickets, totalTickets, quantidadeTickets, &dataAtual);
+                    totalTickets += quantidadeTickets; // Atualiza o total de tickets
+                    printf("%d tickets foram gerados com sucesso!\n", quantidadeTickets);
+                }
+                esperarInput(); // Pausa antes de retornar ao menu
+                break;
+            }
+            case '2':
+                break;
+            case '3':
+                imprimirListaTickets(listaTickets, totalTickets); // Usa totalTickets para impressão
+                esperarInput(); // Pausa antes de retornar ao menu
+                break;
+            case '4':
+                imprimirTicketDetalhado(listaTickets, totalTickets); // Usa totalTickets para impressão
+                esperarInput(); // Pausa antes de retornar ao menu
+                break;
+            case '5': {
+                char escolhaSubmenu;
+                do {
+                    // Exibir submenu
+                    system("clear || cls"); // Limpa a tela (funciona no Linux e Windows)
+                    printf("\n===============================================\n");
+                    printf("            Mapas de Atendimento\n");
+                    printf("===============================================\n");
+                    printf("Selecione uma das opções abaixo:\n");
+                    printf("  1. Mapa Volume de Tickets Atendidos num Intervalo de Datas\n");
+                    printf("  2. Mapa Receita Gerada num Intervalo de Datas\n");
+                    printf("  3. Mapa Tempo Médio de Atendimento num Intervalo de Datas\n");
+                    printf("  4. Mapa Produtividade dos Balcões num Intervalo de Datas\n");
+                    printf("  r. Voltar ao menu inicial\n");
+                    printf("===============================================\n");
+                    printf("\nEscolha uma opção: ");
+                    scanf(" %c", &escolhaSubmenu);
 
-    //mapaVolumeAtendidos (listaTickets, quantidadeTickets);
-
-    //mapaReceitaGerada (listaTickets, quantidadeTickets);
-
-    //mapaMediaAtendimento (listaTickets, quantidadeTickets);
-
-    mapaProdutividadeBalcoes (listaTickets, quantidadeTickets);
-
-    //imprimirTicketDetalhado(listaTickets, quantidadeTickets);
+                    switch (escolhaSubmenu) {
+                        case '1':
+                            mapaVolumeAtendidos(listaTickets, totalTickets);
+                            esperarInput(); // Pausa para visualização
+                            break;
+                        case '2':
+                            mapaReceitaGerada(listaTickets, totalTickets);
+                            esperarInput(); // Pausa para visualização
+                            break;
+                        case '3':
+                            mapaMediaAtendimento(listaTickets, totalTickets);
+                            esperarInput(); // Pausa para visualização
+                            break;
+                        case '4':
+                            mapaProdutividadeBalcoes(listaTickets, totalTickets);
+                            esperarInput(); // Pausa para visualização
+                            break;
+                        case 'r':
+                            // Voltar ao menu principal
+                            printf("Voltando ao menu inicial...\n");
+                            break;
+                        default:
+                            printf("Opção inválida! Tente novamente.\n");
+                            esperarInput(); // Pausa antes de retornar ao submenu
+                            break;
+                    }
+                } while (escolhaSubmenu != 'r');
+                break;
+            }
+            case 'q':
+                printf("Até logo!\n");
+                break;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+                break;
+        }
+    } while (escolha != 'q');
 
     return 0;
 }
