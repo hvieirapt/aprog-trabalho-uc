@@ -3,6 +3,15 @@
 #include <string.h>
 #include <time.h>
 #include <locale.h>
+
+/*
+Trabalho Algoritmia e Programação | 2024/2025 | Simulador de um sistema de tickets para atendimento ao público num centro de saúde
+1232074 Pedro Moreira
+1151392 Hugo Vieira
+Turma 1NB
+*/
+
+
 // Função para gerar um número aleatório dentro de um intervalo [min, max]
 int gerarAleatorio(int min, int max) {
     return rand() % (max - min + 1) + min;
